@@ -1,0 +1,12 @@
+<button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="إظهار أو إخفاء القائمة" aria-controls="nav-sidebar" title="إظهار أو إخفاء القائمة"></button>
+<button type="button" class="dh-sidebar-backdrop" aria-label="إغلاق القائمة"></button>
+<nav class="sticky" id="nav-sidebar" aria-label="القائمة الرئيسية">
+  <div class="dh-nav-heading">مساحة العمل</div>
+  <a class="dh-overview{% if request.resolver_match.url_name == 'index' %} current-nav{% endif %}" href="{% url 'admin:index' %}"{% if request.resolver_match.url_name == 'index' %} aria-current="page"{% endif %}>{% include 'admin/dental_icon.html' with icon='grid' %}<span>نظرة عامة</span></a>
+  <label class="visually-hidden" for="nav-filter">البحث في القائمة</label><input type="search" id="nav-filter" placeholder="ابحث في القائمة…" aria-label="البحث في القائمة">
+  {% for app in available_apps %}
+    <div class="dh-nav-group">{{ app.name }}</div>
+    <table class="dh-nav-table"><tbody>{% for model in app.models %}<tr><th scope="row"><a href="{{ model.admin_url }}"{% if model.admin_url in request.path %} class="current-nav" aria-current="page"{% endif %}>{% include 'admin/dental_icon.html' with icon=model.icon %}<span>{{ model.name }}</span></a></th></tr>{% endfor %}</tbody></table>
+  {% endfor %}
+  <div class="dh-nav-bottom"><span class="dh-security-mark">{% include 'admin/dental_icon.html' with icon='shield' %} الوصول حسب الصلاحيات</span><a href="{% url 'home' %}">الانتقال إلى الموقع {% include 'admin/dental_icon.html' with icon='arrow' %}</a></div>
+</nav>

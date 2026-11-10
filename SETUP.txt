@@ -1,0 +1,87 @@
+DENTALHEALTH — SETUP AND PYTHONANYWHERE DEPLOYMENT
+
+This is a Django REST API, with a public developer landing page and Django admin.
+It does not include a complete patient-facing web or mobile frontend.
+The administration interface at /admin/ is Arabic (RTL), with a responsive
+dashboard, permission-aware statistics, case activity and doctor review links.
+Its assets are bundled locally; collectstatic is required after UI updates.
+ADMIN_TIME_ZONE defaults to Asia/Damascus for admin dates and daily activity.
+The upload contains no database, credentials, uploaded media or default users.
+The existing local .env was preserved. Its old MySQL settings are not used unless
+DB_ENGINE=mysql is explicitly selected and mysqlclient is installed separately.
+SQLite is the default for a new PythonAnywhere free account.
+
+LOCAL
+  uv venv --python 3.11 .venv
+  uv pip install --python .venv/bin/python -r requirements.txt
+For an existing .env, retain its SECRET_KEY. For a new local installation, copy
+.env.example and replace its SECRET_KEY with a long random persistent value.
+  .venv/bin/python manage.py migrate --noinput
+  DEBUG=True .venv/bin/python manage.py runserver 127.0.0.1:8020
+Do not upload the existing .env or source text exports. No local MySQL database
+has been copied or migrated into this new SQLite installation.
+
+ISOLATED VALIDATION (synthetic secret and in-memory test database)
+Run from the full local source; validation scripts are not in the upload archive.
+  .venv/bin/python validation/run.py test accounts validation.test_admin validation.test_readiness --verbosity 2
+  .venv/bin/python validation/run.py makemigrations --check --dry-run
+  .venv/bin/python manage.py collectstatic --noinput
+  .venv/bin/python manage.py check --deploy --fail-level WARNING
+The test suite sends no email and never connects to MySQL or clears a live database.
+To build and test the upload in a fresh disposable virtualenv and database:
+  .venv/bin/python validation/release_check.py
+This command requires uv and validates production settings, WSGI, collected assets,
+registration, role permissions, uploads, administrator approval and token lifecycle.
+
+PYTHONANYWHERE — NEW DEPLOYMENT
+One free account permits one web app. Choose an account with an available web
+slot. Never replace the Password Vault web app to publish DentalHealth.
+Upload dentalhealth-pythonanywhere.zip to the intended account's home directory.
+First verify /home/YOUR-USERNAME/dentalhealth does not already contain a project.
+Then in a Bash console:
+  unzip dentalhealth-pythonanywhere.zip
+  cd dentalhealth
+  python3.11 -m venv .venv
+  .venv/bin/python -m pip install -r requirements.txt
+  .venv/bin/python deploy/configure_pythonanywhere.py --domain YOUR-EXACT-HOSTNAME
+  .venv/bin/python manage.py migrate --noinput
+  .venv/bin/python manage.py collectstatic --noinput
+  .venv/bin/python manage.py check --deploy --fail-level WARNING
+The configuration helper refuses to overwrite .env and creates a new signing
+key only for this new installation. Back up db.sqlite3, .env and private media
+together. Do not regenerate the signing key during updates.
+
+WEB APP
+Choose Manual configuration, Python 3.11. Set source and working directories to
+/home/YOUR-USERNAME/dentalhealth and the virtualenv to
+/home/YOUR-USERNAME/dentalhealth/.venv. Use the WSGI file linked by the Web tab;
+copy deploy/wsgi.generated.py into that WSGI file. Enable Force HTTPS and reload.
+WhiteNoise serves collected static assets. Do not configure /media/ as a public
+static mapping: Django authenticates and authorizes all uploaded-image requests.
+A frontend must fetch media with its Bearer token, or render a fetched blob.
+Admin sessions can also access their authorized files.
+
+ADMINISTRATION AND CLINICAL ROLES
+  .venv/bin/python manage.py createsuperuser
+Create credentials interactively; no default administrator or password exists.
+Use the administrator's email address at the admin login (email authentication).
+Creating or saving a user in admin ensures a profile exists for the chosen role.
+New student and doctor profiles start with Dentistry and can be edited afterwards.
+In admin, approve a verified doctor by enabling Clinical access approved.
+Choosing doctor at registration does not grant access to cases.
+Patients may create and list only their own cases. Approved doctors may view
+all cases and update case status. Students and unapproved doctors cannot access
+other users' clinical data. Profile ownership, age, staff status and clinical
+approval cannot be changed through profile requests. See API.md.
+
+JWT
+Access tokens last 15 minutes. Refresh tokens rotate and old refresh tokens are
+blacklisted. Logout invalidates the submitted refresh token; an already issued
+access token can remain valid until expiry. Password changes or account deletion
+invalidate access and refresh use. Run manage.py flushexpiredtokens periodically
+to remove expired token metadata. The built-in request throttles are per process;
+configure a shared cache if running multiple workers.
+
+PROVIDER REFERENCES
+https://help.pythonanywhere.com/pages/DeployExistingDjangoProject/
+https://help.pythonanywhere.com/pages/FreeAccountsFeatures/

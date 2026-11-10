@@ -1,0 +1,57 @@
+DentalHealth readiness — 11 November 2026
+
+RESULT: ready for upload for the current API and administration scope.
+Publishing is still pending a PythonAnywhere account with an available web app.
+Live-server acceptance checks must run after publishing to the chosen hostname.
+
+69 isolated automated tests PASSED:
+- 37 core API, authentication, permissions, profile, case and media regressions.
+- 8 dashboard, Arabic interface and administration permission regressions.
+- 24 release regressions covering boundary values, sessions, CSRF, token expiry,
+  pagination, image limits, file cleanup and rollback, admin workflows and XSS.
+
+All tests use synthetic records and temporary/in-memory SQLite databases.
+No real email was sent, no MySQL connection was made, and the existing local
+.env and primary db.sqlite3 were preserved.
+
+Corrections verified in this review:
+1. A future birthdate submitted in administration now produces a validation
+   error instead of a database CHECK failure and server error.
+2. Django admin and REST share image validation: valid JPEG/PNG/WebP, at most
+   5 MiB and 20 megapixels. Unsupported, oversized and invalid uploads are rejected.
+3. API error formatting now preserves WWW-Authenticate and Retry-After headers.
+4. Saving a user in administration ensures a matching role profile exists.
+5. Profile account selectors only offer accounts with the matching role.
+
+Fresh production archive validation PASSED in a disposable Python 3.11 virtualenv:
+- All pinned runtime dependencies installed cleanly and are compatible.
+- New .env has mode 0600 and a random persistent signing key; overwrite is refused.
+- All migrations apply; no missing migrations; check --deploy has no warnings.
+- collectstatic produces hashed assets; the generated WSGI module imports.
+- HTTPS redirect, hostname allowlist, secure cookies and security headers pass.
+- Arabic login and all three bundled admin assets return 200.
+- Patient, doctor and student registration, email login and profile updates pass.
+- Multipart case/image creation, patient isolation and private image access pass.
+- HTTPS administration sign-in with CSRF and untrusted-origin rejection pass.
+- Doctor approval through admin enables case access and status changes.
+- Refresh rotation, blacklisting, logout and token reuse rejection pass.
+- Deleting an account removes its cases/uploads and invalidates its access.
+- No users, passwords, credentials, patient files or preview records are packaged.
+See deployment-checks.json for the verified archive hash and scenario results.
+
+Dependency audit: no known vulnerabilities found in the 10 pinned runtime
+packages using pip-audit. This reflects the advisory database at review time.
+
+Earlier browser review covered desktop and 390px mobile layouts, sidebar opening
+and closing, case search, matching dashboard filters and saving a synthetic case.
+The Firefox preview remains separate in .local/admin-preview.sqlite3.
+
+Repeat the full local suite:
+  .venv/bin/python test_api.py
+Repeat the exact upload-package and production lifecycle validation (requires uv):
+  .venv/bin/python validation/release_check.py
+
+The upload contains the API, developer landing page and Arabic Django admin.
+A separate patient-facing web/mobile frontend and email activation/password-reset
+emails are not implemented in this project. SQLite is the tested deployment
+backend; existing MySQL records have not been imported or validated.

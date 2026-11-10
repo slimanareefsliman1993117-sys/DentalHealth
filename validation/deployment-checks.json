@@ -1,0 +1,24 @@
+{
+  "production_scenarios": [
+    "production_https_host_and_security_headers",
+    "arabic_admin_and_collected_hashed_assets",
+    "all_three_roles_registration_login_and_profiles",
+    "multipart_case_creation_ownership_roles_and_private_media",
+    "secure_admin_login_csrf_doctor_approval_and_case_status",
+    "token_rotation_logout_and_reuse_rejection",
+    "account_deletion_cascades_removes_upload_and_revokes_access"
+  ],
+  "result": "passed",
+  "default_accounts_in_archive": false,
+  "fresh_virtualenv": "passed",
+  "pinned_dependencies": "compatible",
+  "fresh_migrations": "passed",
+  "migration_consistency": "passed",
+  "production_checks": "passed",
+  "static_collection": "passed",
+  "private_env_mode": "0o600",
+  "existing_environment_overwrite_refused": true,
+  "source_database_and_environment_unchanged": true,
+  "preview_data_excluded": true,
+  "archive_sha256": "54f780e9d6b0b4b0f0ae3689462b44fd71afbc721fae3c9bc3ec41dde722a182"
+}

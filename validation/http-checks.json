@@ -1,0 +1,8 @@
+{
+  "/": 200,
+  "/admin/login/": 200,
+  "/api/profile/": 401,
+  "/api/cases/": 401,
+  "/media/cases/photos/unknown.png": 401,
+  "/static/admin/css/base.css": 200
+}

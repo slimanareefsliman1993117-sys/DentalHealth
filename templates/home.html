@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DentalHealth API</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;margin:0;background:#f3f7fa;color:#183047}main{max-width:900px;margin:60px auto;padding:32px;background:white;border-radius:18px;box-shadow:0 10px 40px #18304710}h1{font-size:40px;line-height:1.2}a{color:#096b75}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:12px;border-bottom:1px solid #ddd}code{font-size:14px}small{color:#536676}@media(max-width:600px){main{margin:16px;padding:20px}table{font-size:13px}td,th{padding:8px}code{font-size:12px}}</style></head>
+<body><main><small>DENTALHEALTH · DEVELOPER ACCESS</small><h1>Dental care, connected.</h1><p>The DentalHealth API manages patient, student and doctor accounts, profiles and patient-submitted dental cases.</p><p>This deployment provides a JSON API and Django administration. It does not include a patient-facing website or mobile application.</p>
+<table><thead><tr><th>Action</th><th>Method</th><th>Endpoint</th></tr></thead><tbody>
+<tr><td>Register</td><td>POST</td><td><code>/api/register/</code></td></tr>
+<tr><td>Sign in</td><td>POST</td><td><code>/api/login/</code></td></tr>
+<tr><td>Refresh token</td><td>POST</td><td><code>/api/token/refresh/</code></td></tr>
+<tr><td>View or update profile</td><td>GET, PUT, PATCH</td><td><a href="/api/profile/">/api/profile/</a></td></tr>
+<tr><td>Create a case</td><td>POST</td><td><code>/api/cases/create/</code></td></tr>
+<tr><td>List cases</td><td>GET</td><td><a href="/api/cases/">/api/cases/</a></td></tr>
+<tr><td>Update case status</td><td>PATCH</td><td><code>/api/cases/{id}/status/</code></td></tr>
+<tr><td>Sign out</td><td>POST</td><td><code>/api/logout/</code></td></tr>
+<tr><td>Delete own account</td><td>DELETE</td><td><code>/api/account/delete/</code></td></tr>
+</tbody></table><p>Authenticated requests use <code>Authorization: Bearer &lt;access token&gt;</code>. Uploaded images also require authentication. Doctors need administrator approval before accessing clinical cases.</p><p><a href="/admin/">Administration</a></p></main></body></html>
