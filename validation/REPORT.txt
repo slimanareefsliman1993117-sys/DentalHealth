@@ -4,9 +4,10 @@ RESULT: ready for upload for the current API and administration scope.
 Publishing is still pending a PythonAnywhere account with an available web app.
 Live-server acceptance checks must run after publishing to the chosen hostname.
 
-69 isolated automated tests PASSED:
+82 isolated automated tests PASSED:
 - 37 core API, authentication, permissions, profile, case and media regressions.
 - 8 dashboard, Arabic interface and administration permission regressions.
+- 13 public-preview isolation, read-only access and credential-display regressions.
 - 24 release regressions covering boundary values, sessions, CSRF, token expiry,
   pagination, image limits, file cleanup and rollback, admin workflows and XSS.
 
@@ -55,3 +56,13 @@ The upload contains the API, developer landing page and Arabic Django admin.
 A separate patient-facing web/mobile frontend and email activation/password-reset
 emails are not implemented in this project. SQLite is the tested deployment
 backend; existing MySQL records have not been imported or validated.
+
+Public preview update:
+Opt-in login credentials are displayed only for a dedicated non-superuser demo
+account. The preview uses a separate SQLite database containing synthetic records.
+Both dashboard aggregations and model admin queries select that database; normal
+administrators continue to query only the primary clinical database. All preview
+mutations, password changes, account administration, history and private media
+are blocked. Clinical JWT obtain, access and refresh reject the public account.
+The exact source archive also passed production-mode preview login, static assets,
+real/demo data separation and CSRF-protected mutation rejection in a fresh venv.

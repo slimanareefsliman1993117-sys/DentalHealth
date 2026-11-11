@@ -10,6 +10,12 @@
   ],
   "result": "passed",
   "default_accounts_in_archive": false,
+  "public_demo_production": "passed",
+  "separate_demo_database": "passed",
+  "anonymous_credentials_panel": "passed",
+  "secure_demo_login": "passed",
+  "immutable_preview": "passed",
+  "real_and_demo_data_isolation": "passed",
   "fresh_virtualenv": "passed",
   "pinned_dependencies": "compatible",
   "fresh_migrations": "passed",
@@ -20,5 +26,5 @@
   "existing_environment_overwrite_refused": true,
   "source_database_and_environment_unchanged": true,
   "preview_data_excluded": true,
-  "archive_sha256": "54f780e9d6b0b4b0f0ae3689462b44fd71afbc721fae3c9bc3ec41dde722a182"
+  "archive_sha256": "e9d9f7db3078a13efe68c84ae2361d90953f6c2d3c8a10e42c6198b9b520593d"
 }

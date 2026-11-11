@@ -16,7 +16,8 @@ from django.http import FileResponse, Http404
 from django.conf import settings
 from pathlib import Path
 from rest_framework.authentication import SessionAuthentication
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from .authentication import ClinicalJWTAuthentication
+from .demo import is_public_demo
 
 def format_errors(errors):
     """Helper function to format errors into a list with field-specific messages for missing fields."""
@@ -254,9 +255,11 @@ class CaseStatusUpdateView(APIView):
 class PrivateMediaView(APIView):
     """Medical uploads are never served by a public static/media mapping."""
     permission_classes = [IsAuthenticated]
-    authentication_classes = [JWTAuthentication, SessionAuthentication]
+    authentication_classes = [ClinicalJWTAuthentication, SessionAuthentication]
 
     def get(self, request, path):
+        if is_public_demo(request.user):
+            raise Http404
         root = Path(settings.MEDIA_ROOT).resolve()
         file_path = (root / path).resolve()
         if not file_path.is_relative_to(root) or not file_path.is_file():

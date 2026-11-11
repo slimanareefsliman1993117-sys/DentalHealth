@@ -3,6 +3,8 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
 from .models import User, PatientProfile, StudentProfile, DoctorProfile, Specialty, Case
 from .admin_site import STATUS_LABELS
+from django.core.exceptions import PermissionDenied
+from .demo import is_public_demo, data_alias
 
 
 FIELD_LABELS = {
@@ -34,6 +36,23 @@ class DentalAdminMixin:
     empty_value_display = '—'
     singular = 'سجل'
     plural = 'السجلات'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).using(data_alias(request.user))
+
+    def has_add_permission(self, request):
+        return not is_public_demo(request.user) and super().has_add_permission(request)
+
+    def has_change_permission(self, request, obj=None):
+        return not is_public_demo(request.user) and super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return not is_public_demo(request.user) and super().has_delete_permission(request, obj)
+
+    def history_view(self, request, object_id, extra_context=None):
+        if is_public_demo(request.user):
+            raise PermissionDenied
+        return super().history_view(request, object_id, extra_context)
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         field = super().formfield_for_dbfield(db_field, request, **kwargs)

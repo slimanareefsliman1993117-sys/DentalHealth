@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
+from django.conf import settings
+from .demo import is_public_demo
 
 
 class EmailBackend(ModelBackend):
@@ -15,4 +17,7 @@ class EmailBackend(ModelBackend):
             User().set_password(password)
             return None
         if user.check_password(password) and self.user_can_authenticate(user):
+            if is_public_demo(user) and (not settings.PUBLIC_DEMO_ENABLED or user.is_superuser or
+                    request is None or request.path_info != '/admin/login/'):
+                return None
             return user

@@ -48,7 +48,7 @@ Email activation and password-reset email flows are not implemented here.
 .venv/bin/python test_api.py
 ```
 
-The isolated suite has **69 tests** covering API workflows, permissions, uploads,
+The isolated suite has **82 tests** covering API workflows, permissions, uploads,
 administration, CSRF, token expiry, file cleanup and invalid input. It uses only
 synthetic data and temporary databases.
 
@@ -62,6 +62,18 @@ To build the upload and validate it in a fresh disposable Python environment
 This also checks production configuration, migrations, WSGI, static files and a
 complete registration/case/doctor-approval/token/account-deletion workflow.
 See [validation/REPORT.txt](validation/REPORT.txt) for the latest local review.
+
+## Optional public preview
+
+A dedicated read-only demo account can be displayed on the login page. Clinical
+data for that account lives in a **separate SQLite database** containing synthetic
+records. Real records, account administration, history, edits, password changes,
+private media and clinical API access are unavailable to the demo account.
+
+The feature is disabled by default. Follow the public-preview section of
+[SETUP.txt](SETUP.txt) to migrate and seed the preview database before enabling
+`PUBLIC_DEMO_ENABLED`. Use dedicated public demo credentials; retain the owner's
+administrator credentials privately.
 
 ## Deploy to PythonAnywhere
 

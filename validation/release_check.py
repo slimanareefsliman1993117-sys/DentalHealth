@@ -26,7 +26,8 @@ def main():
     subprocess.run([sys.executable, 'deploy/build_package.py'], cwd=source, check=True)
     env = os.environ.copy()
     for key in ['SECRET_KEY', 'DEBUG', 'DB_ENGINE', 'SQLITE_PATH', 'DJANGO_SETTINGS_MODULE', 'ALLOWED_HOSTS',
-                'CSRF_TRUSTED_ORIGINS', 'CORS_ALLOWED_ORIGINS', 'TRUST_PROXY_HEADERS', 'ADMIN_TIME_ZONE']:
+                'CSRF_TRUSTED_ORIGINS', 'CORS_ALLOWED_ORIGINS', 'TRUST_PROXY_HEADERS', 'ADMIN_TIME_ZONE',
+                'PUBLIC_DEMO_ENABLED', 'PUBLIC_DEMO_EMAIL', 'PUBLIC_DEMO_PASSWORD', 'DEMO_SQLITE_PATH']:
         env.pop(key, None)
     with tempfile.TemporaryDirectory(prefix='dental-release-') as folder:
         with ZipFile(archive) as upload:
@@ -51,6 +52,12 @@ def main():
         run([str(python), 'manage.py', 'check', '--deploy', '--fail-level', 'WARNING'], root, env)
         scenario = run([str(python), '-'], root, env, code=(source / 'validation/production_scenario.py').read_text())
         results = json.loads(scenario.stdout)
+        demo_env = {**env, 'PUBLIC_DEMO_ENABLED': 'True', 'PUBLIC_DEMO_PASSWORD': 'Synthetic-Public-Preview-924!'}
+        (root / '.local').mkdir(mode=0o700)
+        run([str(python), 'manage.py', 'migrate', '--database', 'demo', '--noinput'], root, demo_env)
+        run([str(python), 'manage.py', 'setup_public_demo'], root, demo_env)
+        demo = run([str(python), '-'], root, demo_env, code=(source / 'validation/demo_production_scenario.py').read_text())
+        results.update(json.loads(demo.stdout))
     assert before == {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in private_paths if p.exists()}
     results.update(fresh_virtualenv='passed', pinned_dependencies='compatible', fresh_migrations='passed',
                    migration_consistency='passed', production_checks='passed', static_collection='passed',

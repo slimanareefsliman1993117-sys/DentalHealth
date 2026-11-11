@@ -6,6 +6,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import InvalidToken
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.utils import get_md5_hash_password
+from .demo import is_public_demo
 
 User = get_user_model()
 
@@ -30,6 +31,6 @@ class SafeTokenRefreshSerializer(TokenRefreshSerializer):
     def validate(self, attrs):
         token = RefreshToken(attrs['refresh'])
         user = User.objects.filter(pk=token['user_id'], is_active=True).first()
-        if user is None or token.get(api_settings.REVOKE_TOKEN_CLAIM) != get_md5_hash_password(user.password):
+        if user is None or is_public_demo(user) or token.get(api_settings.REVOKE_TOKEN_CLAIM) != get_md5_hash_password(user.password):
             raise InvalidToken('This refresh token is no longer valid.')
         return super().validate(attrs)

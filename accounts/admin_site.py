@@ -7,6 +7,8 @@ from django.db.models.functions import TruncDate
 from django.urls import reverse
 from django.utils import timezone
 from .models import User, PatientProfile, DoctorProfile, Case
+from django.conf import settings
+from .demo import is_public_demo, data_alias, DEMO_MODELS
 
 
 MODEL_LABELS = {
@@ -39,6 +41,10 @@ class DentalAdminSite(AdminSite):
 
     def get_app_list(self, request, app_label=None):
         apps = super().get_app_list(request, app_label)
+        if is_public_demo(request.user):
+            apps = [app for app in apps if app['app_label'] == 'accounts']
+            for app in apps:
+                app['models'] = [model for model in app['models'] if model['object_name'].lower() in DEMO_MODELS]
         rank = {'case': 0, 'patientprofile': 1, 'doctorprofile': 2, 'studentprofile': 3, 'user': 4, 'specialty': 5}
         for app in apps:
             if app['app_label'] == 'accounts':
@@ -56,7 +62,16 @@ class DentalAdminSite(AdminSite):
     def each_context(self, request):
         context = super().each_context(request)
         context['dental_today'] = timezone.localdate()
+        context['public_demo_mode'] = is_public_demo(request.user)
         return context
+
+    def login(self, request, extra_context=None):
+        context = dict(extra_context or {})
+        if settings.PUBLIC_DEMO_ENABLED and settings.PUBLIC_DEMO_PASSWORD:
+            user = User.objects.filter(email__iexact=settings.PUBLIC_DEMO_EMAIL, is_active=True, is_staff=True, is_superuser=False).first()
+            if user:
+                context['public_demo_credentials'] = {'email': settings.PUBLIC_DEMO_EMAIL, 'password': settings.PUBLIC_DEMO_PASSWORD}
+        return super().login(request, extra_context=context)
 
     def may_view(self, request, model):
         admin = self._registry.get(model)
@@ -64,30 +79,31 @@ class DentalAdminSite(AdminSite):
 
     def index(self, request, extra_context=None):
         context = dict(extra_context or {})
+        alias = data_alias(request.user)
         stats = []
         if self.may_view(request, PatientProfile):
-            stats.append({'label': 'إجمالي المرضى', 'value': PatientProfile.objects.count(), 'icon': 'patient', 'tone': 'teal', 'url': reverse('admin:accounts_patientprofile_changelist'), 'hint': 'ملفات المرضى المسجلين'})
+            stats.append({'label': 'إجمالي المرضى', 'value': PatientProfile.objects.using(alias).count(), 'icon': 'patient', 'tone': 'teal', 'url': reverse('admin:accounts_patientprofile_changelist'), 'hint': 'ملفات المرضى المسجلين'})
         if self.may_view(request, DoctorProfile):
-            stats.append({'label': 'الأطباء المعتمدون', 'value': DoctorProfile.objects.filter(user__clinical_access_approved=True, user__is_active=True).count(), 'icon': 'doctor', 'tone': 'blue', 'url': reverse('admin:accounts_doctorprofile_changelist') + '?user__clinical_access_approved=1&user__is_active=1', 'hint': 'فريق الرعاية المعتمد'})
+            stats.append({'label': 'الأطباء المعتمدون', 'value': DoctorProfile.objects.using(alias).filter(user__clinical_access_approved=True, user__is_active=True).count(), 'icon': 'doctor', 'tone': 'blue', 'url': reverse('admin:accounts_doctorprofile_changelist') + '?user__clinical_access_approved=1&user__is_active=1', 'hint': 'فريق الرعاية المعتمد'})
         if self.may_view(request, Case):
-            counts = {row['status']: row['total'] for row in Case.objects.values('status').annotate(total=Count('pk'))}
+            counts = {row['status']: row['total'] for row in Case.objects.using(alias).values('status').annotate(total=Count('pk'))}
             for status, label, icon, tone, hint in [('active', 'الحالات النشطة', 'case', 'violet', 'حالات قيد العلاج'), ('pending', 'بانتظار المراجعة', 'clock', 'amber', 'حالات تحتاج إلى متابعة')]:
                 stats.append({'label': label, 'value': counts.get(status, 0), 'icon': icon, 'tone': tone, 'url': reverse('admin:accounts_case_changelist') + '?status__exact=' + status, 'hint': hint})
             today = timezone.localdate()
             first_day = today - timedelta(days=6)
-            activity = {row['day']: row['total'] for row in Case.objects.filter(created_at__date__gte=first_day, created_at__date__lte=today).annotate(day=TruncDate('created_at')).values('day').annotate(total=Count('pk'))}
+            activity = {row['day']: row['total'] for row in Case.objects.using(alias).filter(created_at__date__gte=first_day, created_at__date__lte=today).annotate(day=TruncDate('created_at')).values('day').annotate(total=Count('pk'))}
             maximum = max(activity.values(), default=0)
             week = [{'day': first_day + timedelta(days=i), 'count': activity.get(first_day + timedelta(days=i), 0)} for i in range(7)]
             for day in week:
                 day['height'] = round(day['count'] / maximum * 100) if maximum else 0
-            recent = list(Case.objects.select_related('patient').order_by('-created_at', '-pk')[:6])
+            recent = list(Case.objects.using(alias).select_related('patient').order_by('-created_at', '-pk')[:6])
             for case in recent:
                 case.dashboard_status = STATUS_LABELS[case.status]
             context.update(can_view_cases=True, recent_cases=recent, weekly_cases=week, weekly_total=sum(d['count'] for d in week),
                            status_summary=[{'label': STATUS_LABELS[key], 'value': counts.get(key, 0), 'key': key} for key in STATUS_LABELS],
                            case_list_url=reverse('admin:accounts_case_changelist'))
         if self.may_view(request, User):
-            doctors = User.objects.filter(user_type='doctor', clinical_access_approved=False, is_active=True).order_by('-date_joined')
+            doctors = User.objects.using(alias).filter(user_type='doctor', clinical_access_approved=False, is_active=True).order_by('-date_joined')
             context.update(can_view_users=True, pending_doctors=list(doctors[:4]), pending_doctor_count=doctors.count(),
                            doctor_review_url=reverse('admin:accounts_user_changelist') + '?' + urlencode({'user_type__exact': 'doctor', 'clinical_access_approved__exact': '0', 'is_active__exact': '1'}))
         context['dashboard_stats'] = stats

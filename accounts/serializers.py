@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
@@ -46,6 +47,8 @@ class RegisterSerializer(serializers.Serializer):
 
     def validate_email(self, value):
         value = value.strip().lower()
+        if value.casefold() == settings.PUBLIC_DEMO_EMAIL.casefold():
+            raise serializers.ValidationError('This email address is reserved for the public preview.')
         if User.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError('Email is already in use.')
         return value

@@ -2,4 +2,4 @@
 if __name__ == '__main__':
     import subprocess,sys
     from pathlib import Path
-    raise SystemExit(subprocess.call([sys.executable, str(Path(__file__).parent/'validation/run.py'), 'test', 'accounts', 'validation.test_admin', 'validation.test_readiness', '--verbosity', '2']))
+    raise SystemExit(subprocess.call([sys.executable, str(Path(__file__).parent/'validation/run.py'), 'test', 'accounts', 'validation.test_admin', 'validation.test_readiness', 'validation.test_public_demo', '--verbosity', '2']))

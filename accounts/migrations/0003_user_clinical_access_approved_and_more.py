@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 def check_existing_emails(apps, schema_editor):
     User = apps.get_model('accounts', 'User')
-    duplicates = User.objects.annotate(normalized=django.db.models.functions.text.Lower('email')).values('normalized').annotate(total=models.Count('pk')).filter(total__gt=1)
+    duplicates = User.objects.using(schema_editor.connection.alias).annotate(normalized=django.db.models.functions.text.Lower('email')).values('normalized').annotate(total=models.Count('pk')).filter(total__gt=1)
     if duplicates.exists():
         raise RuntimeError('Resolve case-insensitive duplicate email accounts before applying this migration; no accounts were merged or deleted.')
 

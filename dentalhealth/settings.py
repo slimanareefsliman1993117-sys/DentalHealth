@@ -30,7 +30,7 @@ MIDDLEWARE = [
 ]
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='', cast=csv)
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_simplejwt.authentication.JWTAuthentication'],
+    'DEFAULT_AUTHENTICATION_CLASSES': ['accounts.authentication.ClinicalJWTAuthentication'],
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
     'DEFAULT_THROTTLE_CLASSES': ['rest_framework.throttling.AnonRateThrottle', 'rest_framework.throttling.UserRateThrottle'],
     'DEFAULT_THROTTLE_RATES': {'anon': '100/hour', 'user': '1000/hour', 'auth': '10/minute'},
@@ -66,6 +66,14 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 LANGUAGE_CODE = 'en-us'
+PUBLIC_DEMO_ENABLED = config('PUBLIC_DEMO_ENABLED', default=False, cast=bool)
+PUBLIC_DEMO_EMAIL = config('PUBLIC_DEMO_EMAIL', default='demo@dentalhealth.example')
+PUBLIC_DEMO_PASSWORD = config('PUBLIC_DEMO_PASSWORD', default='')
+DATABASES['demo'] = {
+    'ENGINE': 'django.db.backends.sqlite3',
+    'NAME': config('DEMO_SQLITE_PATH', default=str(BASE_DIR / '.local' / 'demo.sqlite3')),
+    'OPTIONS': {'timeout': 20},
+}
 TIME_ZONE = 'UTC'
 ADMIN_TIME_ZONE = config('ADMIN_TIME_ZONE', default='Asia/Damascus')
 USE_I18N = True

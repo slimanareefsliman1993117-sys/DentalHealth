@@ -23,7 +23,7 @@ has been copied or migrated into this new SQLite installation.
 
 ISOLATED VALIDATION (synthetic secret and in-memory test database)
 Run from the full local source; validation scripts are not in the upload archive.
-  .venv/bin/python validation/run.py test accounts validation.test_admin validation.test_readiness --verbosity 2
+  .venv/bin/python validation/run.py test accounts validation.test_admin validation.test_readiness validation.test_public_demo --verbosity 2
   .venv/bin/python validation/run.py makemigrations --check --dry-run
   .venv/bin/python manage.py collectstatic --noinput
   .venv/bin/python manage.py check --deploy --fail-level WARNING
@@ -81,6 +81,27 @@ access token can remain valid until expiry. Password changes or account deletion
 invalidate access and refresh use. Run manage.py flushexpiredtokens periodically
 to remove expired token metadata. The built-in request throttles are per process;
 configure a shared cache if running multiple workers.
+
+OPTIONAL PUBLIC READ-ONLY PREVIEW
+The public preview reads clinical records exclusively from the separate 'demo'
+SQLite database in .local/demo.sqlite3. The main database holds only its login
+account. Demo sessions cannot modify records, change passwords, access private
+media, user administration or audit history, or obtain/use clinical API tokens.
+Normal administrators continue to use only the primary clinical database.
+
+In the private .env, set PUBLIC_DEMO_EMAIL and PUBLIC_DEMO_PASSWORD to dedicated
+public preview credentials. Keep PUBLIC_DEMO_ENABLED=False during preparation.
+Never set these variables to the private administrator's credentials.
+  mkdir -p .local
+  chmod 700 .local
+  .venv/bin/python manage.py migrate --database demo --noinput
+  .venv/bin/python manage.py setup_public_demo
+The setup command seeds synthetic records only in the separate preview database
+and grants the preview account only five view permissions. It refuses to reuse
+an existing non-demo account and preserves existing synthetic preview records.
+Set PUBLIC_DEMO_ENABLED=True and reload. The login page then displays its email
+and password for every visitor. PUBLIC_DEMO_ENABLED=False also disables existing
+preview sessions (except logout). .local and all SQLite files remain private.
 
 PROVIDER REFERENCES
 https://help.pythonanywhere.com/pages/DeployExistingDjangoProject/

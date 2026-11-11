@@ -44,3 +44,7 @@ commit. Replacing an image removes the prior file after commit.
 Registration and sign-in are rate-limited. A 401 response means authentication is
 needed or invalid, 403 means the role lacks permission, and 429 means retry later.
 The service contains no email activation or password reset email feature.
+
+The optional public preview account is limited to read-only Django administration
+with a separate synthetic database. Its credentials cannot obtain or use clinical
+JWT tokens, and it cannot access private medical uploads.
